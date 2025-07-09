@@ -1,43 +1,63 @@
 const youtubedl = require('yt-dlp-exec');
 const path = require('path');
 const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 
-async function listAvailableFormats(url) {
-  try {
-    console.log('Obtendo formatos disponíveis...');
-    
-    const result = await youtubedl(
-      url,
-      {
-        listFormats: true,
-        noCheckCertificates: true,
-        noWarnings: true
-      }
-    );
+// Configurar o caminho do ffmpeg
+ffmpeg.setFfmpegPath(ffmpegPath);
 
-    console.log('Formatos disponíveis:');
-    console.log(result);
-    
-  } catch (error) {
-    console.error('Erro ao obter formatos:', error.message);
-  }
+async function mergeAudioVideo(videoPath, audioPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    console.log('Juntando áudio e vídeo...');
+    console.log(`Vídeo: ${videoPath}`);
+    console.log(`Áudio: ${audioPath}`);
+    console.log(`Saída: ${outputPath}`);
+
+    ffmpeg()
+      .input(videoPath)
+      .input(audioPath)
+      .outputOptions([
+        '-c:v copy',        // Copiar vídeo sem recodificar
+        '-c:a aac',         // Converter áudio para AAC
+        '-strict experimental'
+      ])
+      .output(outputPath)
+      .on('end', () => {
+        console.log('Merge concluído com sucesso!');
+        resolve(outputPath);
+      })
+      .on('error', (err) => {
+        console.error('Erro durante o merge:', err.message);
+        reject(err);
+      })
+      .on('progress', (progress) => {
+        if (progress.percent) {
+          console.log(`Progresso: ${Math.round(progress.percent)}%`);
+        }
+      })
+      .run();
+  });
 }
 
-async function downloadYouTubeVideo(url, quality = 'bestvideo+bestaudio') {
+async function downloadAndMergeVideo(url, quality = 'bestvideo[height>=720]+bestaudio') {
   const outputDir = path.join(__dirname, '../downloaded');
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
-  const outputTemplate = path.join(outputDir, '%(title)s.%(ext)s');
 
   try {
-    console.log('Iniciando download...');
+    console.log('=== DOWNLOAD SEPARADO DE ÁUDIO E VÍDEO ===');
     
-    const result = await youtubedl(
+    // Download do vídeo (sem áudio)
+    const videoOutputTemplate = path.join(outputDir, '%(title)s_video.%(ext)s');
+    console.log('Baixando vídeo...');
+    
+    const videoResult = await youtubedl(
       url,
       {
-        format: quality,
-        output: outputTemplate,
+        format: 'bestvideo[height>=720]',
+        output: videoOutputTemplate,
         restrictFilenames: true,
         noCheckCertificates: true,
         noWarnings: true,
@@ -49,34 +69,19 @@ async function downloadYouTubeVideo(url, quality = 'bestvideo+bestaudio') {
       }
     );
 
-    console.log('Download concluído!');
-    console.log('Resultado:', result);
+    // Download do áudio
+    const audioOutputTemplate = path.join(outputDir, '%(title)s_audio.%(ext)s');
+    console.log('Baixando áudio...');
     
-  } catch (error) {
-    console.error('Erro ao baixar o vídeo:', error.message);
-  }
-}
-
-async function downloadYouTubeVideoMKV(url, quality = 'bestvideo+bestaudio') {
-  const outputDir = path.join(__dirname, '../downloaded');
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-  const outputTemplate = path.join(outputDir, '%(title)s.%(ext)s');
-
-  try {
-    console.log('Iniciando download em MKV...');
-    
-    const result = await youtubedl(
+    const audioResult = await youtubedl(
       url,
       {
-        format: quality,
-        output: outputTemplate,
+        format: 'bestaudio',
+        output: audioOutputTemplate,
         restrictFilenames: true,
         noCheckCertificates: true,
         noWarnings: true,
         preferFreeFormats: true,
-        mergeOutputFormat: 'mkv',
         addHeader: [
           'referer:youtube.com',
           'user-agent:googlebot'
@@ -84,26 +89,37 @@ async function downloadYouTubeVideoMKV(url, quality = 'bestvideo+bestaudio') {
       }
     );
 
-    console.log('Download MKV concluído!');
-    console.log('Resultado:', result);
+    // Encontrar os arquivos baixados
+    const files = fs.readdirSync(outputDir);
+    const videoFile = files.find(file => file.includes('_video.'));
+    const audioFile = files.find(file => file.includes('_audio.'));
+
+    if (!videoFile || !audioFile) {
+      throw new Error('Arquivos de vídeo ou áudio não encontrados');
+    }
+
+    const videoPath = path.join(outputDir, videoFile);
+    const audioPath = path.join(outputDir, audioFile);
+    const finalOutputPath = path.join(outputDir, videoFile.replace('_video.', '_final.').replace(/\.[^/.]+$/, '.mp4'));
+
+    console.log('=== FAZENDO MERGE DE ÁUDIO E VÍDEO ===');
+    await mergeAudioVideo(videoPath, audioPath, finalOutputPath);
+
+    // Limpar arquivos temporários
+    console.log('Limpando arquivos temporários...');
+    fs.unlinkSync(videoPath);
+    fs.unlinkSync(audioPath);
+
+    console.log(`Download e merge concluídos! Arquivo final: ${finalOutputPath}`);
     
   } catch (error) {
-    console.error('Erro ao baixar o vídeo MKV:', error.message);
+    console.error('Erro durante o processo:', error.message);
   }
 }
 
 // Exemplo de uso:
 const videoUrl = 'https://www.youtube.com/watch?v=GwvLNW4pFBU';
 
-// Primeiro, listar os formatos disponíveis
-// console.log('=== LISTANDO FORMATOS DISPONÍVEIS ===');
-// listAvailableFormats(videoUrl);
-
-// Depois, fazer o download (comentado por enquanto)
-// console.log('\n=== FAZENDO DOWNLOAD ===');
-// downloadYouTubeVideo(videoUrl, 'best[height<=1080]/best[ext=mp4][height<=1080]');
-downloadYouTubeVideo(videoUrl, 'bestvideo[height>=720]+bestaudio');
-
-// Depois, fazer o download em MKV (comentado por enquanto)
-// console.log('\n=== FAZENDO DOWNLOAD EM MKV ===');
-// downloadYouTubeVideoMKV(videoUrl, 'bestvideo[height<=720]+bestaudio/best[height<=720]');
+// Download separado e merge de áudio/vídeo
+console.log('\n=== DOWNLOAD SEPARADO E MERGE ===');
+downloadAndMergeVideo(videoUrl);
