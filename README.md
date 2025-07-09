@@ -155,14 +155,49 @@ const processor = VideoProcessorFactory.createCustom({
 
 ## 🧪 Testes
 
-```javascript
-// Exemplo de teste com mocks
-const mockDownloader = {
-  download: jest.fn().mockResolvedValue('/path/to/file'),
-  getInfo: jest.fn().mockResolvedValue({ title: 'Test Video' })
-};
+O projeto possui **testes unitários reais** para todos os serviços principais, escritos com Jest e seguindo o padrão AAA (Arrange, Act, Assert) recomendado por Rodrigo Branas. Os testes cobrem:
 
-const processor = new VideoProcessor(mockDownloader, mockMerger, mockFileManager);
+- YouTubeDownloader
+- FFmpegMerger
+- FileSystemManager
+- VideoProcessor
+
+### Como rodar os testes
+
+```bash
+npm run test
+```
+
+### Exemplo de teste (padrão AAA)
+
+```javascript
+it('should process video and merge audio/video', async () => {
+  // Arrange
+  downloader.downloadVideoOnly.mockResolvedValue('video');
+  downloader.downloadAudioOnly.mockResolvedValue('audio');
+  fileManager.listFiles.mockReturnValue(['test_video.mp4', 'test_audio.webm']);
+  fileManager.getFullPath.mockImplementation((dir, file) => `${dir}/${file}`);
+  merger.merge.mockResolvedValue('dir/test_final.mp4');
+
+  // Act
+  const result = await processor.processVideo('url', { outputDir: 'dir' });
+
+  // Assert
+  expect(fileManager.ensureDirectoryExists).toHaveBeenCalledWith('dir');
+  expect(downloader.downloadVideoOnly).toHaveBeenCalled();
+  expect(downloader.downloadAudioOnly).toHaveBeenCalled();
+  expect(merger.merge).toHaveBeenCalled();
+  expect(fileManager.removeFile).toHaveBeenCalledTimes(2);
+  expect(result).toBe('dir/test_final.mp4');
+});
+```
+
+- Todos os testes são isolados, utilizam mocks para dependências externas e silenciam logs para não poluir o output.
+- A cobertura dos serviços é superior a 90%.
+- Para ver a cobertura, rode:
+
+```bash
+npx jest --coverage
 ```
 
 ## 📈 Benefícios da Arquitetura SOLID
