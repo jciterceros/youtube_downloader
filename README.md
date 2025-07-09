@@ -1,102 +1,206 @@
-# YouTube Downloader com Merge de Áudio/Vídeo
+# YouTube Downloader com Merge de Áudio/Vídeo (Arquitetura SOLID)
 
-Este projeto permite baixar vídeos do YouTube separando áudio e vídeo, e depois juntá-los em um único arquivo final de alta qualidade.
+Este projeto permite baixar vídeos do YouTube separando áudio e vídeo, e depois juntá-los em um único arquivo final de alta qualidade. A arquitetura foi refatorada seguindo os princípios SOLID para máxima extensibilidade e manutenibilidade.
 
-## Funcionalidades
+## 🏗️ Arquitetura SOLID
 
-- **Download separado + Merge automático**: Baixa áudio e vídeo separadamente e depois junta automaticamente
-- **Merge de áudio/vídeo**: Função utilitária para juntar arquivos de áudio e vídeo já baixados
+O projeto foi estruturado seguindo os princípios SOLID:
 
-## Instalação
+- **S** - Single Responsibility: Cada classe tem uma única responsabilidade
+- **O** - Open/Closed: Aberto para extensão, fechado para modificação
+- **L** - Liskov Substitution: Implementações podem ser substituídas por suas interfaces
+- **I** - Interface Segregation: Interfaces específicas e coesas
+- **D** - Dependency Inversion: Dependências de abstrações, não de implementações
+
+## 📁 Estrutura do Projeto
+
+```
+youtube_downloader/
+├── src/
+│   ├── interfaces/           # Interfaces SOLID
+│   │   ├── IDownloader.js
+│   │   ├── IMerger.js
+│   │   └── IFileManager.js
+│   ├── services/            # Implementações concretas
+│   │   ├── YouTubeDownloader.js
+│   │   ├── FFmpegMerger.js
+│   │   ├── FileSystemManager.js
+│   │   └── VideoProcessor.js
+│   ├── factories/           # Factories para criação de instâncias
+│   │   └── VideoProcessorFactory.js
+│   ├── examples/            # Exemplos de uso avançado
+│   │   └── advanced-usage.js
+│   └── index.js             # Ponto de entrada simplificado
+├── downloaded/              # Pasta onde os arquivos são salvos
+├── SOLID_ANALYSIS.md        # Documentação da aplicação SOLID
+├── package.json
+└── README.md
+```
+
+## 🚀 Instalação
 
 ```bash
 npm install
 ```
 
-## Como usar
+## 💡 Como Usar
 
-### Download Separado + Merge Automático
+### Uso Básico
+
 ```javascript
-downloadAndMergeVideo(url);
+const { downloadAndMergeVideo } = require('./src/index.js');
+
+// Download e merge automático
+const result = await downloadAndMergeVideo('https://www.youtube.com/watch?v=VIDEO_ID');
+console.log(`Arquivo final: ${result}`);
 ```
-Esta função:
-- Baixa o vídeo (sem áudio) na melhor qualidade disponível (720p ou superior)
-- Baixa o áudio separadamente na melhor qualidade
-- Junta os dois arquivos usando FFmpeg
-- Remove os arquivos temporários automaticamente
-- Gera um arquivo final MP4
+
+### Uso Avançado com Factory
+
+```javascript
+const { VideoProcessorFactory } = require('./src/index.js');
+
+// Criar processador com configuração padrão
+const processor = VideoProcessorFactory.createDefault();
+
+// Processar vídeo com opções customizadas
+const result = await processor.processVideo(
+  'https://www.youtube.com/watch?v=VIDEO_ID',
+  {
+    outputDir: './custom-output',
+    videoQuality: 'bestvideo[height>=1080]',
+    audioQuality: 'bestaudio[ext=m4a]',
+    cleanupTempFiles: false
+  }
+);
+```
 
 ### Merge de Arquivos Existentes
+
 ```javascript
-const videoFile = 'caminho/para/video.mp4';
-const audioFile = 'caminho/para/audio.webm';
-const outputFile = 'caminho/para/final.mp4';
-mergeExistingFiles(videoFile, audioFile, outputFile);
+const { mergeExistingFiles } = require('./src/index.js');
+
+const result = await mergeExistingFiles(
+  './video.mp4',
+  './audio.webm',
+  './final.mp4',
+  {
+    videoCodec: 'copy',
+    audioCodec: 'aac'
+  }
+);
 ```
 
-## Formatos de Qualidade
+## 🔧 Funcionalidades
+
+- **Download separado + Merge automático**: Baixa áudio e vídeo separadamente e depois junta automaticamente
+- **Arquitetura extensível**: Fácil adicionar novos provedores de vídeo ou ferramentas de merge
+- **Configuração flexível**: Opções customizáveis para qualidade, formato e comportamento
+- **Tratamento de erros robusto**: Sistema de tratamento de erros avançado
+- **Processamento em lote**: Suporte para processar múltiplos vídeos
+- **Limpeza automática**: Remove arquivos temporários automaticamente
+
+## 🎯 Exemplos de Extensibilidade
+
+### Adicionar Novo Provedor de Vídeo
+
+```javascript
+const IDownloader = require('./src/interfaces/IDownloader');
+
+class VimeoDownloader extends IDownloader {
+  async download(url, options) {
+    // Implementação específica para Vimeo
+  }
+  
+  async getInfo(url) {
+    // Obter informações do vídeo Vimeo
+  }
+}
+
+// Usar o novo downloader
+const processor = VideoProcessorFactory.createCustom({
+  downloader: new VimeoDownloader()
+});
+```
+
+### Adicionar Nova Ferramenta de Merge
+
+```javascript
+const IMerger = require('./src/interfaces/IMerger');
+
+class HandBrakeMerger extends IMerger {
+  async merge(videoPath, audioPath, outputPath, options) {
+    // Implementação usando HandBrake
+  }
+}
+
+// Usar o novo merger
+const processor = VideoProcessorFactory.createCustom({
+  merger: new HandBrakeMerger()
+});
+```
+
+## 📊 Formatos de Qualidade
 
 - `bestvideo[height>=720]`: Melhor vídeo com altura mínima de 720p
+- `bestvideo[height>=1080]`: Melhor vídeo com altura mínima de 1080p
 - `bestaudio`: Melhor áudio disponível
+- `bestaudio[ext=m4a]`: Melhor áudio em formato M4A
 
-## Estrutura de Arquivos
-
-```
-youtube_downloader/
-├── src/
-│   └── index.js          # Código principal
-├── downloaded/           # Pasta onde os arquivos são salvos
-├── package.json
-└── README.md
-```
-
-## Dependências
+## 🛠️ Dependências
 
 - `yt-dlp-exec`: Para download de vídeos do YouTube
 - `fluent-ffmpeg`: Para processamento de áudio/vídeo
 - `@ffmpeg-installer/ffmpeg`: Instalador automático do FFmpeg
 
-## Exemplo de Uso
+## 🧪 Testes
 
-### Download e Merge Automático
 ```javascript
-const videoUrl = 'https://www.youtube.com/watch?v=VIDEO_ID';
+// Exemplo de teste com mocks
+const mockDownloader = {
+  download: jest.fn().mockResolvedValue('/path/to/file'),
+  getInfo: jest.fn().mockResolvedValue({ title: 'Test Video' })
+};
 
-// Download e merge automático
-downloadAndMergeVideo(videoUrl);
+const processor = new VideoProcessor(mockDownloader, mockMerger, mockFileManager);
 ```
 
-### Merge de Arquivos Existentes
-```javascript
-const { mergeExistingFiles } = require('./src/index.js');
+## 📈 Benefícios da Arquitetura SOLID
 
-const videoFile = 'caminho/para/video.mp4';
-const audioFile = 'caminho/para/audio.webm';
-const outputFile = 'caminho/para/final.mp4';
+### 1. Testabilidade
+- Fácil criação de mocks para testes unitários
+- Isolamento de responsabilidades para testes específicos
 
-mergeExistingFiles(videoFile, audioFile, outputFile);
-```
+### 2. Extensibilidade
+- Adicionar novos provedores sem modificar código existente
+- Implementar novas estratégias de merge facilmente
 
-## Vantagens do Download Separado + Merge
+### 3. Manutenibilidade
+- Código organizado e fácil de entender
+- Mudanças isoladas em classes específicas
 
-1. **Melhor qualidade**: Permite escolher a melhor qualidade de vídeo e áudio separadamente
-2. **Controle total**: Você pode escolher exatamente qual formato de áudio e vídeo usar
-3. **Compatibilidade**: O arquivo final é sempre MP4, garantindo compatibilidade
-4. **Eficiência**: Não precisa recodificar o vídeo, apenas junta os streams
-5. **Limpeza automática**: Remove arquivos temporários automaticamente
+### 4. Reutilização
+- Componentes podem ser reutilizados em outros contextos
+- Interfaces padronizadas facilitam integração
 
-## Características Técnicas
+## 🎨 Características Técnicas
 
 - **Vídeo**: Copiado sem recodificação (`-c:v copy`)
 - **Áudio**: Convertido para AAC (`-c:a aac`)
 - **Formato final**: MP4
-- **Qualidade mínima**: 720p para vídeo
+- **Qualidade configurável**: 720p, 1080p ou customizada
 - **Progresso**: Exibido em tempo real durante o merge
+- **Limpeza automática**: Remove arquivos temporários automaticamente
 
-## Notas
+## 📝 Notas
 
 - Os arquivos temporários são automaticamente removidos após o merge
 - O arquivo final é sempre salvo em formato MP4
 - O progresso do merge é exibido em tempo real
 - Em caso de erro, uma mensagem detalhada é exibida
-- O diretório `downloaded/` é criado automaticamente se não existir 
+- O diretório de saída é criado automaticamente se não existir
+- A arquitetura permite fácil extensão para outros provedores de vídeo
+
+## 🔍 Documentação Adicional
+
+Para mais detalhes sobre a aplicação dos princípios SOLID, consulte o arquivo [SOLID_ANALYSIS.md](./SOLID_ANALYSIS.md). 
