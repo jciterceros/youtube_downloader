@@ -21,19 +21,26 @@ youtube_downloader/
 │   │   ├── IDownloader.js
 │   │   ├── IMerger.js
 │   │   └── IFileManager.js
-│   ├── services/            # Implementações concretas
+│   ├── services/             # Implementações concretas
 │   │   ├── YouTubeDownloader.js
 │   │   ├── FFmpegMerger.js
 │   │   ├── FileSystemManager.js
 │   │   └── VideoProcessor.js
-│   ├── factories/           # Factories para criação de instâncias
+│   ├── factories/            # Factories para criação de instâncias
 │   │   └── VideoProcessorFactory.js
-│   ├── examples/            # Exemplos de uso avançado
+│   ├── examples/             # Exemplos de uso avançado
 │   │   └── advanced-usage.js
-│   └── index.js             # Ponto de entrada simplificado
-├── downloaded/              # Pasta onde os arquivos são salvos
-├── SOLID_ANALYSIS.md        # Documentação da aplicação SOLID
+│   └── index.js              # Ponto de entrada simplificado
+├── tests/                    # Testes unitários (Jest, padrão AAA)
+│   ├── FileSystemManager.test.js
+│   ├── YouTubeDownloader.test.js
+│   ├── FFmpegMerger.test.js
+│   └── VideoProcessor.test.js
+├── downloaded/               # Pasta onde os arquivos baixados são salvos
+├── coverage/                 # Relatórios de cobertura de testes
+├── SOLID_ANALYSIS.md         # Documentação da aplicação SOLID
 ├── package.json
+├── package-lock.json
 └── README.md
 ```
 
