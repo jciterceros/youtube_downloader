@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  youtube-downloader:
+    build: .
+    container_name: youtube_downloader_app
+    volumes:
+      - ./downloaded:/app/downloaded
+    # ports:
+    #   - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
