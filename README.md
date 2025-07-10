@@ -12,50 +12,139 @@ O projeto foi estruturado seguindo os princípios SOLID:
 - **I** - Interface Segregation: Interfaces específicas e coesas
 - **D** - Dependency Inversion: Dependências de abstrações, não de implementações
 
-## 📁 Estrutura do Projeto
+## 📁 Estrutura do Projeto (Workspaces)
+
+O projeto utiliza **workspaces npm** para organizar o código em módulos separados:
 
 ```
 youtube_downloader/
-├── src/
-│   ├── interfaces/           # Interfaces SOLID
-│   │   ├── IDownloader.js
-│   │   ├── IMerger.js
-│   │   └── IFileManager.js
-│   ├── services/             # Implementações concretas
-│   │   ├── YouTubeDownloader.js
-│   │   ├── FFmpegMerger.js
-│   │   ├── FileSystemManager.js
-│   │   └── VideoProcessor.js
-│   ├── factories/            # Factories para criação de instâncias
-│   │   └── VideoProcessorFactory.js
-│   ├── examples/             # Exemplos de uso avançado
-│   │   └── advanced-usage.js
-│   └── index.js              # Ponto de entrada simplificado
-├── tests/                    # Testes unitários (Jest, padrão AAA)
-│   ├── FileSystemManager.test.js
-│   ├── YouTubeDownloader.test.js
-│   ├── FFmpegMerger.test.js
-│   └── VideoProcessor.test.js
-├── downloaded/               # Pasta onde os arquivos baixados são salvos
-├── coverage/                 # Relatórios de cobertura de testes
-├── SOLID_ANALYSIS.md         # Documentação da aplicação SOLID
-├── package.json
-├── package-lock.json
-└── README.md
+├── backend/                    # API REST + Lógica de negócio
+│   ├── src/
+│   │   ├── interfaces/         # Interfaces SOLID
+│   │   │   ├── IDownloader.js
+│   │   │   ├── IMerger.js
+│   │   │   └── IFileManager.js
+│   │   ├── services/           # Implementações concretas
+│   │   │   ├── YouTubeDownloader.js
+│   │   │   ├── FFmpegMerger.js
+│   │   │   ├── FileSystemManager.js
+│   │   │   └── VideoProcessor.js
+│   │   ├── factories/          # Factories para criação de instâncias
+│   │   │   └── VideoProcessorFactory.js
+│   │   ├── examples/           # Exemplos de uso avançado
+│   │   │   └── advanced-usage.js
+│   │   ├── index.js            # Ponto de entrada simplificado
+│   │   └── server.js           # Servidor Express
+│   ├── tests/                  # Testes unitários (Jest)
+│   │   ├── FileSystemManager.test.js
+│   │   ├── YouTubeDownloader.test.js
+│   │   ├── FFmpegMerger.test.js
+│   │   └── VideoProcessor.test.js
+│   ├── downloaded/             # Pasta onde os arquivos baixados são salvos
+│   ├── Dockerfile              # Containerização do backend
+│   └── package.json            # Dependências do backend
+│
+│
+├── frontend/                   # Interface React + TypeScript
+│   ├── src/
+│   │   ├── components/         # Componentes React
+│   │   │   ├── DownloaderApp.tsx
+│   │   │   ├── DownloadForm.tsx
+│   │   │   ├── DownloadResult.tsx
+│   │   │   ├── Header.tsx
+│   │   │   └── Hero.tsx
+│   │   ├── services/           # Serviços de API
+│   │   │   ├── api.ts
+│   │   │   └── downloadService.ts
+│   │   ├── hooks/              # Custom hooks React
+│   │   │   └── useDownload.ts
+│   │   ├── config/             # Configurações
+│   │   │   └── themes.ts
+│   │   ├── types/              # Definições TypeScript
+│   │   │   └── index.ts
+│   │   ├── App.tsx             # Componente principal
+│   │   ├── index.tsx           # Ponto de entrada
+│   │   └── index.css           # Estilos globais
+│   ├── Dockerfile              # Containerização do frontend
+│   └── package.json            # Dependências do frontend
+│
+├── docs/                       # Documentação geral
+│   ├── adr/                    # Architecture Decision Records
+│   │   ├── 0001-arquitetura-solid-e-injecao-dependencia.md
+│   │   └── 0002-framework-testes-jest.md
+│   ├── C1_Context.md           # Contexto da aplicação
+│   ├── C2_Container.md         # Containers
+│   ├── C3_Component.md         # Componentes
+│   └── C4_Code.md              # Código
+├── docker-compose.yml          # Orquestração Docker
+├── env.example                 # Variáveis de ambiente
+├── package.json                # Workspace root
+└── README.md                   # Este arquivo
 ```
 
 ## 🚀 Instalação
 
+### Opção 1: Instalação Local (Workspaces)
 ```bash
+# Instalar dependências de todos os workspaces
 npm install
+
+# Executar backend
+cd backend && npm start
+
+# Executar frontend (em outro terminal)
+cd frontend && npm start
 ```
+
+### Opção 2: Docker (Recomendado)
+```bash
+# Desenvolvimento
+./scripts/dev.ps1 start
+
+# Produção
+docker-compose up --build
+```
+
+## 📦 Dependências por Workspace
+
+### Backend (`backend/package.json`)
+**Dependências principais:**
+- `@ffmpeg-installer/ffmpeg`: Instalador automático do FFmpeg
+- `cors`: Middleware para CORS
+- `express`: Servidor HTTP
+- `fluent-ffmpeg`: Processamento de áudio/vídeo
+- `yt-dlp-exec`: Download de vídeos do YouTube
+- `ytdl-core`: Biblioteca alternativa para YouTube
+
+**DevDependencies:**
+- `jest`: Framework de testes
+
+### Frontend (`frontend/package.json`)
+**Dependências principais:**
+- `react`: Framework de UI
+- `react-dom`: Renderização React
+- `react-scripts`: Scripts de desenvolvimento
+- `typescript`: Tipagem estática
+- `web-vitals`: Métricas de performance
+
+**Dependências de teste:**
+- `@testing-library/dom`: Utilitários de teste DOM
+- `@testing-library/jest-dom`: Matchers customizados
+- `@testing-library/react`: Utilitários de teste React
+- `@testing-library/user-event`: Simulação de eventos
+
+**DevDependencies:**
+- `@types/jest`: Tipos para Jest
+- `@types/node`: Tipos para Node.js
+- `@types/react`: Tipos para React
+- `@types/react-dom`: Tipos para React DOM
 
 ## 💡 Como Usar
 
 ### Uso Básico
 
 ```javascript
-const { downloadAndMergeVideo } = require('./src/index.js');
+const { downloadAndMergeVideo } = require('./backend/src/index.js');
 
 // Download e merge automático
 const result = await downloadAndMergeVideo('https://www.youtube.com/watch?v=VIDEO_ID');
@@ -65,7 +154,7 @@ console.log(`Arquivo final: ${result}`);
 ### Uso Avançado com Factory
 
 ```javascript
-const { VideoProcessorFactory } = require('./src/index.js');
+const { VideoProcessorFactory } = require('./backend/src/index.js');
 
 // Criar processador com configuração padrão
 const processor = VideoProcessorFactory.createDefault();
@@ -85,7 +174,7 @@ const result = await processor.processVideo(
 ### Merge de Arquivos Existentes
 
 ```javascript
-const { mergeExistingFiles } = require('./src/index.js');
+const { mergeExistingFiles } = require('./backend/src/index.js');
 
 const result = await mergeExistingFiles(
   './video.mp4',
@@ -106,13 +195,15 @@ const result = await mergeExistingFiles(
 - **Tratamento de erros robusto**: Sistema de tratamento de erros avançado
 - **Processamento em lote**: Suporte para processar múltiplos vídeos
 - **Limpeza automática**: Remove arquivos temporários automaticamente
+- **Interface web moderna**: Frontend React com TypeScript
+- **API REST**: Backend Express com endpoints bem definidos
 
 ## 🎯 Exemplos de Extensibilidade
 
 ### Adicionar Novo Provedor de Vídeo
 
 ```javascript
-const IDownloader = require('./src/interfaces/IDownloader');
+const IDownloader = require('./backend/src/interfaces/IDownloader');
 
 class VimeoDownloader extends IDownloader {
   async download(url, options) {
@@ -133,7 +224,7 @@ const processor = VideoProcessorFactory.createCustom({
 ### Adicionar Nova Ferramenta de Merge
 
 ```javascript
-const IMerger = require('./src/interfaces/IMerger');
+const IMerger = require('./backend/src/interfaces/IMerger');
 
 class HandBrakeMerger extends IMerger {
   async merge(videoPath, audioPath, outputPath, options) {
@@ -154,95 +245,70 @@ const processor = VideoProcessorFactory.createCustom({
 - `bestaudio`: Melhor áudio disponível
 - `bestaudio[ext=m4a]`: Melhor áudio em formato M4A
 
-## 🛠️ Dependências
+## 🛠️ Scripts Disponíveis
 
-- `yt-dlp-exec`: Para download de vídeos do YouTube
-- `fluent-ffmpeg`: Para processamento de áudio/vídeo
-- `@ffmpeg-installer/ffmpeg`: Instalador automático do FFmpeg
-
-## 🧪 Testes
-
-O projeto possui **testes unitários reais** para todos os serviços principais, escritos com Jest e seguindo o padrão AAA (Arrange, Act, Assert) recomendado por Rodrigo Branas. Os testes cobrem:
-
-- YouTubeDownloader
-- FFmpegMerger
-- FileSystemManager
-- VideoProcessor
-
-### Como rodar os testes
-
+### Root Workspace
 ```bash
-npm run test
+npm test                    # Executar testes de todos os workspaces
 ```
 
-### Exemplo de teste (padrão AAA)
-
-```javascript
-it('should process video and merge audio/video', async () => {
-  // Arrange
-  downloader.downloadVideoOnly.mockResolvedValue('video');
-  downloader.downloadAudioOnly.mockResolvedValue('audio');
-  fileManager.listFiles.mockReturnValue(['test_video.mp4', 'test_audio.webm']);
-  fileManager.getFullPath.mockImplementation((dir, file) => `${dir}/${file}`);
-  merger.merge.mockResolvedValue('dir/test_final.mp4');
-
-  // Act
-  const result = await processor.processVideo('url', { outputDir: 'dir' });
-
-  // Assert
-  expect(fileManager.ensureDirectoryExists).toHaveBeenCalledWith('dir');
-  expect(downloader.downloadVideoOnly).toHaveBeenCalled();
-  expect(downloader.downloadAudioOnly).toHaveBeenCalled();
-  expect(merger.merge).toHaveBeenCalled();
-  expect(fileManager.removeFile).toHaveBeenCalledTimes(2);
-  expect(result).toBe('dir/test_final.mp4');
-});
-```
-
-- Todos os testes são isolados, utilizam mocks para dependências externas e silenciam logs para não poluir o output.
-- A cobertura dos serviços é superior a 90%.
-- Para ver a cobertura, rode:
-
+### Backend
 ```bash
-npx jest --coverage
+cd backend
+npm start                   # Iniciar servidor de produção
+npm run dev                 # Iniciar servidor de desenvolvimento
+npm test                    # Executar testes
 ```
 
-## 📈 Benefícios da Arquitetura SOLID
+### Frontend
+```bash
+cd frontend
+npm start                   # Iniciar servidor de desenvolvimento
+npm run build               # Build de produção
+npm test                    # Executar testes
+npm run eject               # Ejetar configurações (irreversível)
+```
 
-### 1. Testabilidade
-- Fácil criação de mocks para testes unitários
-- Isolamento de responsabilidades para testes específicos
+## 🐳 Docker
 
-### 2. Extensibilidade
-- Adicionar novos provedores sem modificar código existente
-- Implementar novas estratégias de merge facilmente
+O projeto inclui configuração completa do Docker para desenvolvimento e produção:
 
-### 3. Manutenibilidade
-- Código organizado e fácil de entender
-- Mudanças isoladas em classes específicas
+### Desenvolvimento
+```bash
+# Iniciar ambiente de desenvolvimento
+./scripts/dev.ps1 start
 
-### 4. Reutilização
-- Componentes podem ser reutilizados em outros contextos
-- Interfaces padronizadas facilitam integração
+# Ver logs
+./scripts/dev.ps1 logs
 
-## 🎨 Características Técnicas
+# Parar ambiente
+./scripts/dev.ps1 stop
+```
 
-- **Vídeo**: Copiado sem recodificação (`-c:v copy`)
-- **Áudio**: Convertido para AAC (`-c:a aac`)
-- **Formato final**: MP4
-- **Qualidade configurável**: 720p, 1080p ou customizada
-- **Progresso**: Exibido em tempo real durante o merge
-- **Limpeza automática**: Remove arquivos temporários automaticamente
+### Produção
+```bash
+# Build e execução
+docker-compose up --build
+```
 
-## 📝 Notas
+## 📚 Documentação
 
-- Os arquivos temporários são automaticamente removidos após o merge
-- O arquivo final é sempre salvo em formato MP4
-- O progresso do merge é exibido em tempo real
-- Em caso de erro, uma mensagem detalhada é exibida
-- O diretório de saída é criado automaticamente se não existir
-- A arquitetura permite fácil extensão para outros provedores de vídeo
+- **ADR (Architecture Decision Records)**: Decisões arquiteturais importantes
+- **C4 Model**: Documentação da arquitetura em diferentes níveis
+- **Integration Guide**: Guia de integração do frontend
+- **Testes**: Cobertura completa com Jest
 
-## 🔍 Documentação Adicional
+## 🔄 Desenvolvimento
 
-Para mais detalhes sobre a aplicação dos princípios SOLID, consulte o arquivo [SOLID_ANALYSIS.md](./SOLID_ANALYSIS.md). 
+### Estrutura de Workspaces
+O projeto utiliza workspaces npm para:
+- **Separação de responsabilidades**: Backend e frontend isolados
+- **Dependências compartilhadas**: Algumas dependências no root
+- **Desenvolvimento independente**: Cada workspace pode ser desenvolvido separadamente
+- **Build otimizado**: Dependências compartilhadas são instaladas uma vez
+
+### Fluxo de Desenvolvimento
+1. **Backend**: Desenvolver APIs e lógica de negócio
+2. **Frontend**: Consumir APIs e criar interface
+3. **Testes**: Manter cobertura de testes em ambos os workspaces
+4. **Docker**: Testar integração completa 
